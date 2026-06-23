@@ -1,0 +1,55 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.screen__body {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+/* Inline "create" row reusing the list row's metrics. */
+.screen__add {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.screen__add-glyph {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 9px;
+  text-align: center;
+}
+
+.screen__add-input {
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: var(--text);
+}
+
+.screen__add-input::placeholder {
+  color: var(--text-muted);
+}
+
+.screen__add-input:focus {
+  outline: none;
+}
+
+.screen__error {
+  padding: 16px 20px;
+  font-size: 13px;
+}
+
+.screen__error {
+  color: #d4493f;
+}

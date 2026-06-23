@@ -1,0 +1,62 @@
+.select-repo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+}
+
+.select-repo__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 380px;
+}
+
+.select-repo__title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.select-repo__subtitle {
+  margin: 0 0 24px;
+  color: var(--text-muted);
+}
+
+.select-repo__subtitle code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--text);
+}
+
+.select-repo__button {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    filter 0.1s ease,
+    opacity 0.1s ease;
+}
+
+.select-repo__button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.select-repo__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.select-repo__error {
+  margin: 16px 0 0;
+  color: #d4493f;
+  font-size: 13px;
+}

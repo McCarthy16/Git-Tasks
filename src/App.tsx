@@ -1,50 +1,35 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { useView } from "./useView";
+import { SelectRepo } from "./components/SelectRepo";
+import { ProjectsScreen } from "./components/ProjectsScreen";
+import { TasksScreen } from "./components/TasksScreen";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const { view, error, dispatch } = useView();
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  if (!view) return <div className="app" />;
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+    <div className="app">
+      {view.screen === "select_repo" && <SelectRepo dispatch={dispatch} />}
+      {view.screen === "projects" && (
+        <ProjectsScreen
+          workspace={view.workspace}
+          projects={view.projects}
+          dispatch={dispatch}
+          error={error}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      )}
+      {view.screen === "tasks" && (
+        <TasksScreen
+          workspace={view.workspace}
+          project={view.project}
+          tasks={view.tasks}
+          dispatch={dispatch}
+          error={error}
+        />
+      )}
+    </div>
   );
 }
 

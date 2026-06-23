@@ -30,7 +30,7 @@ Everything commits with your code. Branches, merges, history. Works offline, wor
 ```
 .tasks/
   projects/
-    proj_<uuidv7>/
+    project_<uuidv7>/
       events/
         <uuidv7>.json
   tasks/
@@ -52,7 +52,7 @@ Every event is a small JSON file named by its UUIDv7 ID:
   "id": "01932d8b2a1c4f3e...",
   "type": "created",
   "payload": {
-    "project_id": "proj_01932b4a7f3e...",
+    "project_id": "project_01932b4a7f3e...",
     "title": "Build event store"
   }
 }
@@ -69,7 +69,7 @@ All entities use **UUIDv7**, a UUID format with a millisecond Unix timestamp in 
 IDs are prefixed by entity type:
 
 ```
-proj_01932b4a7f3e8c2d...   <- project
+project_01932b4a7f3e8c2d...   <- project
 task_01932d8b2a1c4f3e...   <- task
 ```
 
