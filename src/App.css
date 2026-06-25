@@ -102,6 +102,7 @@ body {
 
 .row__name {
   flex: 0 1 auto;
+  min-width: 0;
   font-weight: 450;
   white-space: nowrap;
   overflow: hidden;
@@ -135,6 +136,19 @@ body {
   border-radius: 3px;
 }
 
+.row__chip {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 450;
+  color: var(--text-muted);
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
 .row__meta {
   flex: 0 0 auto;
   width: 28px;
@@ -142,4 +156,176 @@ body {
   font-variant-numeric: tabular-nums;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+/* ── Shared popup shell (context menus + dialogs) ────── */
+.popup {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.popup__header {
+  padding: 10px 14px;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--border);
+}
+
+.popup__footer {
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Context menu ────────────────────────────────────── */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  width: 200px;
+}
+
+.popup__items {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup__item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popup__item:hover {
+  background: var(--hover);
+}
+
+.popup__item--danger {
+  color: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  .popup__item--danger {
+    color: #f87171;
+  }
+}
+
+/* ── Dialogs ─────────────────────────────────────────── */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.dialog {
+  min-width: 280px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.dialog__body {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.dialog__input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+
+.dialog__input:focus {
+  border-color: var(--accent);
+}
+
+.dialog__select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+
+.dialog__select:focus {
+  border-color: var(--accent);
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.dialog__btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.dialog__btn--cancel {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.dialog__btn--cancel:hover {
+  background: var(--hover);
+}
+
+.dialog__btn--confirm {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.dialog__btn--confirm:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.dialog__btn--confirm:disabled {
+  opacity: 0.4;
+  cursor: default;
 }

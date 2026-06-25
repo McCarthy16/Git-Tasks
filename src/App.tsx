@@ -2,6 +2,7 @@ import { useView } from "./useView";
 import { SelectRepo } from "./components/SelectRepo";
 import { ProjectsScreen } from "./components/ProjectsScreen";
 import { TasksScreen } from "./components/TasksScreen";
+import { TaskDetailScreen } from "./components/TaskDetailScreen";
 import "./App.css";
 
 function App() {
@@ -11,7 +12,12 @@ function App() {
 
   return (
     <div className="app">
-      {view.screen === "select_repo" && <SelectRepo dispatch={dispatch} />}
+      {view.screen === "select_repo" && (
+        <SelectRepo
+          dispatch={dispatch}
+          recentWorkspaces={view.recent_workspaces}
+        />
+      )}
       {view.screen === "projects" && (
         <ProjectsScreen
           workspace={view.workspace}
@@ -24,7 +30,21 @@ function App() {
         <TasksScreen
           workspace={view.workspace}
           project={view.project}
+          projects={view.projects}
           tasks={view.tasks}
+          statuses={view.statuses}
+          dispatch={dispatch}
+          error={error}
+        />
+      )}
+      {view.screen === "task_detail" && (
+        <TaskDetailScreen
+          key={view.task.id}
+          workspace={view.workspace}
+          project={view.project}
+          task={view.task}
+          events={view.events}
+          statuses={view.statuses}
           dispatch={dispatch}
           error={error}
         />

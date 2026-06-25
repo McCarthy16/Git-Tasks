@@ -1,13 +1,15 @@
 import { useState } from "react";
 import type { Dispatch } from "../types";
+import { basename } from "../path";
 import "./SelectRepo.css";
 
-/**
- * Screen 1: shown when no workspace is open. The button dispatches
- * `pick_workspace`; the backend opens the native folder picker, finds-or-creates
- * `.tasks`, and returns the next view.
- */
-export function SelectRepo({ dispatch }: { dispatch: Dispatch }) {
+export function SelectRepo({
+  dispatch,
+  recentWorkspaces,
+}: {
+  dispatch: Dispatch;
+  recentWorkspaces: string[];
+}) {
   const [busy, setBusy] = useState(false);
 
   async function pick() {
@@ -17,6 +19,10 @@ export function SelectRepo({ dispatch }: { dispatch: Dispatch }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function openRecent(path: string) {
+    await dispatch({ type: "open_workspace", path });
   }
 
   return (
@@ -34,6 +40,25 @@ export function SelectRepo({ dispatch }: { dispatch: Dispatch }) {
         >
           {busy ? "Opening…" : "Select Repo"}
         </button>
+        {recentWorkspaces.length > 0 && (
+          <>
+            <div className="select-repo__divider" />
+            <div className="select-repo__recents">
+              {recentWorkspaces.map((path) => (
+                <button
+                  key={path}
+                  className="select-repo__recent"
+                  onClick={() => openRecent(path)}
+                >
+                  <span className="select-repo__recent-name">
+                    {basename(path)}
+                  </span>
+                  <span className="select-repo__recent-path">{path}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -22,6 +22,10 @@ pub enum Error {
     NotCreated,
     #[error("project {0} does not exist")]
     ProjectNotFound(crate::projects::ProjectId),
+    #[error("task {0} does not exist")]
+    TaskNotFound(crate::tasks::TaskId),
+    #[error("status {0} does not exist")]
+    StatusNotFound(crate::statuses::StatusId),
     #[error("no workspace is open")]
     NoWorkspace,
     #[error("no project is selected")]

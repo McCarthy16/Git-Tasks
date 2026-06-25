@@ -10,7 +10,7 @@ export function AddRow({
   onSubmit,
 }: {
   placeholder: string;
-  onSubmit: (name: string) => void | Promise<void>;
+  onSubmit: (name: string) => unknown;
 }) {
   const [name, setName] = useState("");
 

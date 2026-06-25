@@ -34,6 +34,11 @@ macro_rules! prefixed_id {
                 Self(::uuid::Uuid::now_v7())
             }
 
+            /// Wrap an existing UUID (used for deterministic seed IDs).
+            pub fn from_uuid(uuid: ::uuid::Uuid) -> Self {
+                Self(uuid)
+            }
+
             /// The underlying UUID.
             pub fn as_uuid(&self) -> ::uuid::Uuid {
                 self.0
@@ -42,6 +47,12 @@ macro_rules! prefixed_id {
             /// Creation time (ms since the Unix epoch) decoded from the UUIDv7.
             pub fn created_at_millis(&self) -> ::core::option::Option<u64> {
                 $crate::shared::id::millis_from_uuid_v7(&self.0)
+            }
+        }
+
+        impl ::core::convert::From<::uuid::Uuid> for $name {
+            fn from(uuid: ::uuid::Uuid) -> Self {
+                Self(uuid)
             }
         }
 
@@ -97,6 +108,28 @@ macro_rules! prefixed_id {
 }
 
 pub(crate) use prefixed_id;
+
+/// Namespace UUID used to derive deterministic IDs for all seeded entities.
+///
+/// Combine with a per-domain slug via [`seed_id`] to get a stable,
+/// human-meaningful ID that survives across builds and machines.
+pub const SEED_NAMESPACE: uuid::Uuid = uuid::Uuid::from_bytes([
+    0xa1, 0xb2, 0xc3, 0xd4, 0xe5, 0xf6, 0x78, 0x90,
+    0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89,
+]);
+
+/// Derive a deterministic entity ID from a human-readable slug.
+///
+/// Uses UUID v5 (SHA-1 + [`SEED_NAMESPACE`]) so the same slug always produces
+/// the same ID — on every machine, in every build, for every user.
+///
+/// ```
+/// // In a domain module:
+/// // let id: StatusId = seed_id("backlog");
+/// ```
+pub fn seed_id<Id: From<uuid::Uuid>>(slug: &str) -> Id {
+    Id::from(uuid::Uuid::new_v5(&SEED_NAMESPACE, slug.as_bytes()))
+}
 
 prefixed_id!(
     /// Identifier for a single event file (bare UUIDv7 hex, no prefix).

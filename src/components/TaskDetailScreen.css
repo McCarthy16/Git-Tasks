@@ -1,0 +1,180 @@
+.task-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Content area ─────────────────────────────────────── */
+.task-detail__content {
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-detail__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-detail__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* ── Divider ──────────────────────────────────────────── */
+.task-detail__divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Timeline section ─────────────────────────────────── */
+.task-detail__timeline {
+  padding: 24px 28px 40px;
+}
+
+.task-detail__timeline-heading {
+  margin: 0 0 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Timeline list ────────────────────────────────────── */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline__entry {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+/* ── Spine (dot + connecting line) ───────────────────── */
+.timeline__spine {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 10px;
+  padding-top: 4px;
+}
+
+.timeline__dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  border: none;
+}
+
+/* Event-type colours */
+.timeline__dot[data-kind="created"],
+.timeline__dot[data-kind="reopened"] {
+  background: #22c55e;
+}
+
+.timeline__dot[data-kind="closed"] {
+  background: #ef4444;
+}
+
+.timeline__dot[data-kind="renamed"] {
+  background: var(--accent);
+}
+
+.timeline__dot[data-kind="description_updated"] {
+  background: #a855f7;
+}
+
+.timeline__dot[data-kind="moved"] {
+  background: #f59e0b;
+}
+
+.timeline__dot[data-kind="status_changed"] {
+  background: #14b8a6;
+}
+
+.timeline__line {
+  flex: 1;
+  width: 1px;
+  min-height: 16px;
+  background: var(--border);
+  margin: 4px 0 0;
+}
+
+/* ── Entry body ───────────────────────────────────────── */
+.timeline__body {
+  flex: 1;
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Button variant for clickable entries */
+.timeline__body--btn {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1;
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  /* Extend hover area slightly beyond text */
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin-top: -5px;
+  margin-left: -8px;
+  margin-bottom: calc(20px - 5px);
+  transition: background 0.1s ease;
+}
+
+.timeline__body--btn:hover {
+  background: var(--hover);
+}
+
+.timeline__body--btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.timeline__label {
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* "— view" hint: always present in DOM so layout is stable; fades in on hover */
+.timeline__peek {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.timeline__body--btn:hover .timeline__peek {
+  opacity: 1;
+}
+
+.timeline__time {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}

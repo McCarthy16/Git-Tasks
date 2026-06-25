@@ -1,0 +1,121 @@
+.md-editor {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+/* Toolbar */
+.md-editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-wrap: wrap;
+}
+
+.md-editor__btn {
+  all: unset;
+  cursor: pointer;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-muted);
+  line-height: 1.4;
+  transition: background 100ms, color 100ms;
+}
+
+.md-editor__btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.md-editor__btn.is-active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.md-editor__divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+/* Editor body */
+.md-editor__body {
+  flex: 1;
+}
+
+.md-editor__body .tiptap {
+  outline: none;
+  padding: 12px 14px;
+  min-height: 120px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  caret-color: var(--accent);
+}
+
+/* Placeholder */
+.md-editor__body .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Typography inside editor */
+.md-editor__body .tiptap h1 { font-size: 1.5em; font-weight: 700; margin: 0.6em 0 0.3em; }
+.md-editor__body .tiptap h2 { font-size: 1.25em; font-weight: 700; margin: 0.6em 0 0.3em; }
+.md-editor__body .tiptap h3 { font-size: 1.1em; font-weight: 600; margin: 0.6em 0 0.3em; }
+
+.md-editor__body .tiptap p { margin: 0 0 0.5em; }
+
+.md-editor__body .tiptap ul,
+.md-editor__body .tiptap ol {
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+
+.md-editor__body .tiptap code {
+  font-family: var(--font-mono);
+  background: var(--hover);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 0.9em;
+  color: var(--accent);
+}
+
+.md-editor__body .tiptap pre {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  margin: 0.6em 0;
+  overflow-x: auto;
+}
+
+.md-editor__body .tiptap pre code {
+  background: none;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.md-editor__body .tiptap blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 12px;
+  color: var(--text-muted);
+  margin: 0.5em 0;
+}
+
+.md-editor__body .tiptap s { color: var(--text-muted); }
+
+.md-editor__body .tiptap strong { color: var(--text); font-weight: 600; }

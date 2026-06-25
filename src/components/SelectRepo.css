@@ -60,3 +60,51 @@
   color: #d4493f;
   font-size: 13px;
 }
+
+.select-repo__divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border, rgba(128, 128, 128, 0.2));
+  margin: 20px 0 16px;
+}
+
+.select-repo__recents {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.select-repo__recent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.2));
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.select-repo__recent:hover {
+  background: var(--hover, rgba(128, 128, 128, 0.08));
+}
+
+.select-repo__recent-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.select-repo__recent-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 340px;
+}

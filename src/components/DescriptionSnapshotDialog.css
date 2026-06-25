@@ -1,0 +1,35 @@
+.desc-snapshot {
+  width: 560px;
+  max-width: 90vw;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.desc-snapshot__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.desc-snapshot__timestamp {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.desc-snapshot__body {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface);
+}
+
+.desc-snapshot__empty {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}

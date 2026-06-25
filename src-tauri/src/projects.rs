@@ -20,19 +20,23 @@ prefixed_id!(
 /// An event in a project's history.
 ///
 /// Adjacently tagged so it serializes as `{ "type": ..., "payload": ... }`
-/// inside the [`Event`] envelope. Only `created` exists for now; future
-/// variants (`renamed`, `closed`, ...) are added here and to the [`EventKind`]
-/// impl below.
+/// inside the [`Event`] envelope.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload", rename_all = "snake_case")]
 pub enum ProjectEventKind {
     Created { name: String },
+    Renamed { new_name: String },
+    Closed,
+    Reopened,
 }
 
 impl EventKind for ProjectEventKind {
     fn event_type(&self) -> &'static str {
         match self {
             ProjectEventKind::Created { .. } => "created",
+            ProjectEventKind::Renamed { .. } => "renamed",
+            ProjectEventKind::Closed => "closed",
+            ProjectEventKind::Reopened => "reopened",
         }
     }
 }
@@ -45,6 +49,7 @@ pub type ProjectEvent = Event<ProjectEventKind>;
 pub struct Project {
     pub id: ProjectId,
     pub name: String,
+    pub closed: bool,
     /// Creation time (ms since the Unix epoch), decoded from the `created` event.
     pub created_at_millis: Option<u64>,
 }
@@ -62,8 +67,24 @@ impl Project {
                     project = Some(Project {
                         id,
                         name: name.clone(),
+                        closed: false,
                         created_at_millis: event.created_at_millis(),
                     });
+                }
+                ProjectEventKind::Renamed { new_name } => {
+                    if let Some(p) = project.as_mut() {
+                        p.name = new_name.clone();
+                    }
+                }
+                ProjectEventKind::Closed => {
+                    if let Some(p) = project.as_mut() {
+                        p.closed = true;
+                    }
+                }
+                ProjectEventKind::Reopened => {
+                    if let Some(p) = project.as_mut() {
+                        p.closed = false;
+                    }
                 }
             }
         }
@@ -83,6 +104,38 @@ pub fn create(ws: &Workspace, name: impl Into<String>) -> Result<Project> {
     Project::replay(id, std::slice::from_ref(&event)).ok_or(Error::NotCreated)
 }
 
+/// Rename a project, returning the rebuilt project.
+///
+/// Fails with [`Error::ProjectNotFound`] if the project doesn't exist.
+pub fn rename(ws: &Workspace, id: ProjectId, new_name: impl Into<String>) -> Result<Project> {
+    load(ws, id)?.ok_or(Error::ProjectNotFound(id))?;
+    let event = ProjectEvent::new(ProjectEventKind::Renamed {
+        new_name: new_name.into(),
+    });
+    store::append(&ws.events_dir(COLLECTION, id), &event)?;
+    load(ws, id)?.ok_or(Error::NotCreated)
+}
+
+/// Close a project, returning the rebuilt project.
+///
+/// Fails with [`Error::ProjectNotFound`] if the project doesn't exist.
+pub fn close(ws: &Workspace, id: ProjectId) -> Result<Project> {
+    load(ws, id)?.ok_or(Error::ProjectNotFound(id))?;
+    let event = ProjectEvent::new(ProjectEventKind::Closed);
+    store::append(&ws.events_dir(COLLECTION, id), &event)?;
+    load(ws, id)?.ok_or(Error::NotCreated)
+}
+
+/// Reopen a closed project, returning the rebuilt project.
+///
+/// Fails with [`Error::ProjectNotFound`] if the project doesn't exist.
+pub fn reopen(ws: &Workspace, id: ProjectId) -> Result<Project> {
+    load(ws, id)?.ok_or(Error::ProjectNotFound(id))?;
+    let event = ProjectEvent::new(ProjectEventKind::Reopened);
+    store::append(&ws.events_dir(COLLECTION, id), &event)?;
+    load(ws, id)?.ok_or(Error::NotCreated)
+}
+
 /// Load a single project, or `None` if it has no events on disk.
 pub fn load(ws: &Workspace, id: ProjectId) -> Result<Option<Project>> {
     let events: Vec<ProjectEvent> = store::read_all(&ws.events_dir(COLLECTION, id))?;
@@ -92,12 +145,23 @@ pub fn load(ws: &Workspace, id: ProjectId) -> Result<Option<Project>> {
     Ok(Project::replay(id, &events))
 }
 
-/// List every project in the workspace, oldest first.
+/// List every open (non-closed) project in the workspace, oldest first.
 pub fn list(ws: &Workspace) -> Result<Vec<Project>> {
+    list_where(ws, |p| !p.closed)
+}
+
+/// List every closed (archived) project in the workspace, oldest first.
+pub fn list_closed(ws: &Workspace) -> Result<Vec<Project>> {
+    list_where(ws, |p| p.closed)
+}
+
+fn list_where(ws: &Workspace, pred: impl Fn(&Project) -> bool) -> Result<Vec<Project>> {
     let mut projects = Vec::new();
     for id in store::list_ids::<ProjectId>(&ws.collection_dir(COLLECTION))? {
         if let Some(project) = load(ws, id)? {
-            projects.push(project);
+            if pred(&project) {
+                projects.push(project);
+            }
         }
     }
     Ok(projects)
@@ -162,6 +226,72 @@ mod tests {
 
         let back: ProjectEvent = serde_json::from_value(value).unwrap();
         assert_eq!(back.id, event.id);
+    }
+
+    #[test]
+    fn rename_updates_name_and_replays() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ws = Workspace::new(tmp.path());
+
+        let project = create(&ws, "Original").unwrap();
+        let renamed = rename(&ws, project.id, "Updated").unwrap();
+        assert_eq!(renamed.name, "Updated");
+        assert_eq!(renamed.id, project.id);
+
+        let reloaded = load(&ws, project.id).unwrap().unwrap();
+        assert_eq!(reloaded.name, "Updated");
+    }
+
+    #[test]
+    fn close_and_reopen_toggle_closed_flag() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ws = Workspace::new(tmp.path());
+
+        let project = create(&ws, "Roadmap").unwrap();
+        assert!(!project.closed);
+
+        let closed = close(&ws, project.id).unwrap();
+        assert!(closed.closed);
+
+        let reopened = reopen(&ws, project.id).unwrap();
+        assert!(!reopened.closed);
+
+        let reloaded = load(&ws, project.id).unwrap().unwrap();
+        assert!(!reloaded.closed);
+    }
+
+    #[test]
+    fn list_excludes_closed_and_list_closed_shows_them() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ws = Workspace::new(tmp.path());
+
+        let a = create(&ws, "Open").unwrap();
+        let b = create(&ws, "Archived").unwrap();
+        close(&ws, b.id).unwrap();
+
+        let open = list(&ws).unwrap();
+        assert_eq!(open.len(), 1);
+        assert_eq!(open[0].id, a.id);
+
+        let closed = list_closed(&ws).unwrap();
+        assert_eq!(closed.len(), 1);
+        assert_eq!(closed[0].id, b.id);
+    }
+
+    #[test]
+    fn update_on_missing_project_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        let ws = Workspace::new(tmp.path());
+
+        let missing = ProjectId::new();
+        assert!(matches!(
+            rename(&ws, missing, "x"),
+            Err(Error::ProjectNotFound(_))
+        ));
+        assert!(matches!(
+            close(&ws, missing),
+            Err(Error::ProjectNotFound(_))
+        ));
     }
 
     #[test]
