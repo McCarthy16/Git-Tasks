@@ -1,0 +1,21 @@
+[package]
+name = "tasks-server"
+version = "0.1.0"
+edition = "2021"
+description = "The tasks daemon: owns the core logic and runtime, exposing it over a local HTTP interface."
+
+[[bin]]
+name = "tasks-server"
+path = "src/main.rs"
+
+[dependencies]
+tasks-core = { path = "../../packages/core" }
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+axum = "0.8"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

@@ -1,0 +1,21 @@
+[package]
+name = "tasks-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core application logic: events, storage, projections, commands, and reconstruction."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v7", "v5", "serde"] }
+thiserror = "2"
+
+[dev-dependencies]
+tempfile = "3"
+
+[features]
+# Exposes `storage::InMemoryEventStore`, a disk-free `EventStore` double for
+# tests. Off by default so it never lands in a production build; consumers turn
+# it on under their own `[dev-dependencies]`. Core's own tests always see it
+# (via `cfg(test)`) without enabling the feature.
+test-util = []
