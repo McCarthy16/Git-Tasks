@@ -141,12 +141,25 @@ body {
   margin-left: auto;
   padding: 2px 8px;
   border: 1px solid var(--border);
-  border-radius: 100px;
+  border-radius: 4px;
   font-size: 11px;
   font-weight: 450;
   color: var(--text-muted);
   white-space: nowrap;
   line-height: 1.6;
+}
+
+.row__chip--btn {
+  cursor: pointer;
+  /* Neutralize native button styling — this class also lands on <button>. */
+  appearance: none;
+  background: transparent;
+  font-family: inherit;
+}
+
+.row__chip--btn:hover {
+  background: var(--hover);
+  color: var(--text);
 }
 
 .row__meta {

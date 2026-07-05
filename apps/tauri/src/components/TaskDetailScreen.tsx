@@ -6,6 +6,7 @@ import { Screen } from "./Screen";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { GhostTextField } from "./GhostTextField";
 import { DescriptionSnapshotDialog } from "./DescriptionSnapshotDialog";
+import { ChangeStatusDialog } from "./ChangeStatusDialog";
 import "./TaskDetailScreen.css";
 
 const AUTOSAVE_DELAY_MS = 600;
@@ -31,6 +32,7 @@ export function TaskDetailScreen({
   const sessionEventIds = useRef<Map<string, string>>(new Map());
   const saveTimer = useRef<number | null>(null);
   const [snapshotEvent, setSnapshotEvent] = useState<TaskEventEntry | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -84,11 +86,9 @@ export function TaskDetailScreen({
               value={task.name}
               onCommit={handleTitleCommit}
             />
-            {task.status_id && (
-              <span className="row__chip">
-                {statuses.find((s) => s.id === task.status_id)?.name}
-              </span>
-            )}
+            <button className="row__chip row__chip--btn" onClick={() => setStatusDialogOpen(true)}>
+              {statuses.find((s) => s.id === task.status_id)?.name ?? "None"}
+            </button>
           </div>
           <MarkdownEditor
             content={task.description}
@@ -142,6 +142,19 @@ export function TaskDetailScreen({
         <DescriptionSnapshotDialog
           event={snapshotEvent}
           onClose={() => setSnapshotEvent(null)}
+        />
+      )}
+
+      {statusDialogOpen && (
+        <ChangeStatusDialog
+          name={task.name}
+          currentStatusId={task.status_id}
+          statuses={statuses}
+          onConfirm={(statusId) => {
+            dispatch({ type: "set_task_status", task_id: task.id, status_id: statusId });
+            setStatusDialogOpen(false);
+          }}
+          onCancel={() => setStatusDialogOpen(false)}
         />
       )}
     </Screen>

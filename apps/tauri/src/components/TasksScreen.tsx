@@ -60,7 +60,15 @@ export function TasksScreen({
             key={task.id}
             name={task.name}
             id={task.id}
-            chip={statuses.find((s) => s.id === task.status_id)?.name}
+            chip={statuses.find((s) => s.id === task.status_id)?.name ?? "None"}
+            onChipClick={() =>
+              setDialog({
+                kind: "change_status",
+                id: task.id,
+                name: task.name,
+                currentStatusId: task.status_id,
+              })
+            }
             onClick={() => dispatch({ type: "open_task", task_id: task.id })}
             onContextMenu={(e) => {
               e.preventDefault();
