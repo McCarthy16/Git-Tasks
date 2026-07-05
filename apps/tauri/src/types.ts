@@ -58,6 +58,7 @@ export type View =
       screen: "task_detail";
       workspace: WorkspaceView;
       project: Project;
+      projects: Project[];
       task: Task;
       events: TaskEventEntry[];
       statuses: Status[];

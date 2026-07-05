@@ -1,8 +1,6 @@
 import { useState } from "react";
-import type { Dispatch, Project, WorkspaceView } from "../types";
-import { basename } from "../path";
+import type { Dispatch, Project } from "../types";
 import { Screen } from "./Screen";
-import { AddRow } from "./AddRow";
 import { List } from "./List";
 import { Row } from "./Row";
 import { ContextMenu } from "./ContextMenu";
@@ -14,14 +12,15 @@ type DialogState =
   | { kind: "rename"; id: string; name: string }
   | { kind: "remove"; id: string; name: string };
 
-/** Screen 2: the projects in the open workspace. Selecting one opens its tasks. */
+/**
+ * The Home pane: the projects in the open workspace. Selecting one opens its
+ * tasks; creation happens via the sidebar CTA, management via context menu.
+ */
 export function ProjectsScreen({
-  workspace,
   projects,
   dispatch,
   error,
 }: {
-  workspace: WorkspaceView;
   projects: Project[];
   dispatch: Dispatch;
   error: string | null;
@@ -30,19 +29,7 @@ export function ProjectsScreen({
   const [dialog, setDialog] = useState<DialogState | null>(null);
 
   return (
-    <Screen
-      crumbs={[
-        {
-          label: basename(workspace.root),
-          onClick: () => dispatch({ type: "close_workspace" }),
-        },
-      ]}
-      error={error}
-    >
-      <AddRow
-        placeholder="New project…"
-        onSubmit={(name) => dispatch({ type: "create_project", name })}
-      />
+    <Screen error={error}>
       <List>
         {projects.map((project) => (
           <Row

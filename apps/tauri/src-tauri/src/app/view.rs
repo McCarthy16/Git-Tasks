@@ -92,10 +92,12 @@ pub enum View {
         tasks: Vec<Task>,
         statuses: Vec<Status>,
     },
-    /// A task is open: its detail and changelog.
+    /// A task is open: its detail and changelog. Carries the full project
+    /// list so the sidebar can render alongside the detail pane.
     TaskDetail {
         workspace: WorkspaceView,
         project: Project,
+        projects: Vec<Project>,
         task: Task,
         events: Vec<TaskEventView>,
         statuses: Vec<Status>,

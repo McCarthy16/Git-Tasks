@@ -274,6 +274,7 @@ impl AppState {
                         return Ok(View::TaskDetail {
                             workspace,
                             project,
+                            projects: self.daemon.list_projects(ws)?,
                             task,
                             events,
                             statuses: all_statuses,

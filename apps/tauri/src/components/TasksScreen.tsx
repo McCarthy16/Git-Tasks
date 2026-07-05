@@ -1,6 +1,5 @@
 import { useState } from "react";
-import type { Dispatch, Project, Status, Task, WorkspaceView } from "../types";
-import { basename } from "../path";
+import type { Dispatch, Project, Status, Task } from "../types";
 import { Screen } from "./Screen";
 import { AddRow } from "./AddRow";
 import { List } from "./List";
@@ -18,9 +17,8 @@ type DialogState =
   | { kind: "change_status"; id: string; name: string; currentStatusId: string | null }
   | { kind: "remove"; id: string; name: string };
 
-/** Screen 3: the tasks within the open project. The first crumb returns to the project list. */
+/** The tasks pane: the tasks within the open project. */
 export function TasksScreen({
-  workspace,
   project,
   projects,
   tasks,
@@ -28,7 +26,6 @@ export function TasksScreen({
   dispatch,
   error,
 }: {
-  workspace: WorkspaceView;
   project: Project;
   projects: Project[];
   tasks: Task[];
@@ -40,16 +37,7 @@ export function TasksScreen({
   const [dialog, setDialog] = useState<DialogState | null>(null);
 
   return (
-    <Screen
-      crumbs={[
-        {
-          label: basename(workspace.root),
-          onClick: () => dispatch({ type: "close_project" }),
-        },
-        { label: project.name },
-      ]}
-      error={error}
-    >
+    <Screen error={error}>
       <AddRow
         placeholder="New task…"
         onSubmit={(name) => dispatch({ type: "create_task", name })}

@@ -6,7 +6,7 @@ export type Crumb = {
   onClick?: () => void;
 };
 
-/** Slim, centered header showing a breadcrumb trail. Shared across screens. */
+/** Slim header above the main pane: a left-aligned breadcrumb trail. */
 export function Header({ crumbs }: { crumbs: Crumb[] }) {
   return (
     <header className="header">

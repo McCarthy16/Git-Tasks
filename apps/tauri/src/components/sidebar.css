@@ -1,0 +1,149 @@
+/* ── App shell: sidebar + main pane ──────────────────── */
+.shell {
+  display: flex;
+  height: 100%;
+}
+
+.shell__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+}
+
+.sidebar {
+  flex: 0 0 216px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.sidebar__nav {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 12px 8px;
+  overflow-y: auto;
+}
+
+/* The open repo's name, as plain typography above the nav items. */
+.sidebar__repo {
+  margin: 0 2px 10px;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__section {
+  margin: 16px 2px 4px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.sidebar__item:hover {
+  background: var(--hover);
+}
+
+.sidebar__item--active {
+  background: var(--hover);
+  font-weight: 550;
+}
+
+.sidebar__item--cta {
+  color: var(--text-muted);
+}
+
+.sidebar__item--cta:hover {
+  color: var(--text);
+}
+
+.sidebar__item-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__icon {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+.sidebar__item--active .sidebar__icon {
+  color: var(--text);
+}
+
+/* Small dot glyph mirroring the list rows' project marker. */
+.sidebar__dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin: 0 3.5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+}
+
+.sidebar__plus {
+  flex: 0 0 auto;
+  width: 14px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.sidebar__footer {
+  flex: 0 0 auto;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar__workspace {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.1s ease;
+}
+
+.sidebar__workspace:hover {
+  background: var(--hover);
+  color: var(--text);
+}

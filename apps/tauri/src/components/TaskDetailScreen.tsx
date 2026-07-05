@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Dispatch, Project, Status, Task, TaskEventEntry, View, WorkspaceView } from "../types";
-import { basename } from "../path";
+import type { Dispatch, Status, Task, TaskEventEntry, View } from "../types";
 import { formatTime } from "../time";
 import { Screen } from "./Screen";
 import { MarkdownEditor } from "./MarkdownEditor";
@@ -11,18 +10,14 @@ import "./TaskDetailScreen.css";
 
 const AUTOSAVE_DELAY_MS = 600;
 
-/** Screen 4: a single task — editable title, description, and event timeline. */
+/** The task detail pane: editable title, description, and event timeline. */
 export function TaskDetailScreen({
-  workspace,
-  project,
   task,
   events,
   statuses,
   dispatch,
   error,
 }: {
-  workspace: WorkspaceView;
-  project: Project;
   task: Task;
   events: TaskEventEntry[];
   statuses: Status[];
@@ -70,14 +65,7 @@ export function TaskDetailScreen({
   }
 
   return (
-    <Screen
-      crumbs={[
-        { label: basename(workspace.root), onClick: () => dispatch({ type: "close_project" }) },
-        { label: project.name, onClick: () => dispatch({ type: "close_task_detail" }) },
-        { label: task.name },
-      ]}
-      error={error}
-    >
+    <Screen error={error}>
       <div className="task-detail">
         <div className="task-detail__content">
           <div className="task-detail__title-row">
