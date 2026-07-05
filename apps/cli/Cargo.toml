@@ -1,0 +1,21 @@
+[package]
+name = "tasks-cli"
+version = "0.1.0"
+edition = "2021"
+description = "The tasks CLI: a terminal client for the tasks daemon."
+
+[[bin]]
+name = "tasks"
+path = "src/main.rs"
+
+[dependencies]
+tasks-core = { path = "../../packages/core" }
+
+clap = { version = "4", features = ["derive", "env"] }
+ureq = { version = "2", features = ["json"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
