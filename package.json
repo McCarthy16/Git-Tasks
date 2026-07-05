@@ -4,7 +4,9 @@
   "private": true,
   "description": "",
   "scripts": {
-    "dev": "pnpm --filter @tasks/tauri dev",
+    "dev": "sh scripts/dev.sh",
+    "dev:server": "cargo run -p tasks-server",
+    "dev:app": "pnpm --filter @tasks/tauri tauri dev",
     "build": "pnpm --filter @tasks/tauri build",
     "tauri": "pnpm --filter @tasks/tauri tauri"
   },

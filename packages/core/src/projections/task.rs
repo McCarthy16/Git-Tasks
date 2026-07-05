@@ -1,6 +1,6 @@
 //! The `Task` projection: a task as rebuilt from its event history.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::projections::project::ProjectId;
 use crate::projections::status::StatusId;
@@ -16,7 +16,7 @@ prefixed_id!(
 ///
 /// This is pure read-side data — the shape of a task after all its events have
 /// been folded. The folding itself lives in the `reconstruction` layer.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Task {
     pub id: TaskId,
     /// The project this task currently belongs to (may change via `moved`).

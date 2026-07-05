@@ -24,7 +24,7 @@ pub enum StatusKind {
 ///
 /// This is pure read-side data — the shape of a status after all its events
 /// have been folded. The folding itself lives in the `reconstruction` layer.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Status {
     pub id: StatusId,
     pub name: String,

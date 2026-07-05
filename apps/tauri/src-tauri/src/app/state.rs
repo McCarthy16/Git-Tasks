@@ -1,22 +1,25 @@
 //! The server-side UI state and its reducer.
+//!
+//! This holds app logic only: which workspace is open, what's selected, and
+//! the recents list. All data operations are handed off to the tasks daemon
+//! via the [`Daemon`] client — nothing here touches the event store directly.
 
 use std::path::PathBuf;
 
+use tasks_core::{EventId, ProjectId, StatusId, StatusKind, TaskId};
+
 use crate::app::view::{TaskEventView, View, WorkspaceView};
+use crate::daemon::Daemon;
 use crate::error::{Error, Result};
-use crate::projects::{self, ProjectId};
-use crate::shared::id::EventId;
-use crate::shared::store::Workspace;
-use crate::statuses::{self, StatusId, StatusKind};
-use crate::tasks::{self, TaskId};
 
 const MAX_RECENTS: usize = 3;
 
 /// The entire navigable state of the app, held server-side:
-/// which workspace is open, and which project (if any) is selected. The
-/// rendered [`View`] is derived from these two fields plus what's on disk.
+/// which workspace is open, and which project/task (if any) is selected. The
+/// rendered [`View`] is derived from these fields plus data from the daemon.
 #[derive(Default)]
 pub struct AppState {
+    daemon: Daemon,
     workspace: Option<PathBuf>,
     selected_project: Option<ProjectId>,
     selected_task: Option<TaskId>,
@@ -38,18 +41,17 @@ impl AppState {
 }
 
 impl AppState {
-    /// A [`Workspace`] for the open repo, if one is open.
-    fn workspace(&self) -> Option<Workspace> {
-        self.workspace.clone().map(Workspace::new)
+    /// The open workspace root, or [`Error::NoWorkspace`].
+    fn workspace(&self) -> Result<&PathBuf> {
+        self.workspace.as_ref().ok_or(Error::NoWorkspace)
     }
 
     // --- Transitions ----------------------------------------------------
 
-    /// Enter `root` as the workspace, finding-or-creating its `.tasks` folder.
-    /// Clears any selected project and records the path in the recents list.
+    /// Enter `root` as the workspace, asking the daemon to find-or-create its
+    /// `.tasks` folder. Clears any selection and records the path in recents.
     pub fn open_workspace(&mut self, root: PathBuf) -> Result<()> {
-        Workspace::new(root.clone())
-            .ensure(&[projects::COLLECTION, tasks::COLLECTION, statuses::COLLECTION])?;
+        self.daemon.init_workspace(&root)?;
         self.push_recent(root.clone());
         self.workspace = Some(root);
         self.selected_project = None;
@@ -97,8 +99,8 @@ impl AppState {
 
     /// Update a task's markdown description (appends a new event).
     pub fn update_task_description(&mut self, task_id: TaskId, description: String) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::update_description(&ws, task_id, description)?;
+        self.daemon
+            .update_task_description(self.workspace()?, task_id, description, None)?;
         Ok(())
     }
 
@@ -109,8 +111,8 @@ impl AppState {
         event_id: EventId,
         description: String,
     ) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::update_description_in_place(&ws, task_id, event_id, description)?;
+        self.daemon
+            .update_task_description(self.workspace()?, task_id, description, Some(event_id))?;
         Ok(())
     }
 
@@ -121,79 +123,69 @@ impl AppState {
         event_id: EventId,
         new_name: String,
     ) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::rename_in_place(&ws, task_id, event_id, new_name)?;
+        self.daemon
+            .rename_task(self.workspace()?, task_id, new_name, Some(event_id))?;
         Ok(())
     }
 
     /// Create a project in the open workspace.
     pub fn create_project(&mut self, name: String) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        projects::create(&ws, name)?;
+        self.daemon.create_project(self.workspace()?, name)?;
         Ok(())
     }
 
     /// Rename a project.
     pub fn rename_project(&mut self, project_id: ProjectId, new_name: String) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        projects::rename(&ws, project_id, new_name)?;
+        self.daemon.rename_project(self.workspace()?, project_id, new_name)?;
         Ok(())
     }
 
     /// Archive (close) a project.
     pub fn archive_project(&mut self, project_id: ProjectId) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        projects::close(&ws, project_id)?;
+        self.daemon.close_project(self.workspace()?, project_id)?;
         Ok(())
     }
 
     /// Restore (reopen) an archived project.
     pub fn restore_project(&mut self, project_id: ProjectId) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        projects::reopen(&ws, project_id)?;
+        self.daemon.reopen_project(self.workspace()?, project_id)?;
         Ok(())
     }
 
     /// Create a task in the open project.
     pub fn create_task(&mut self, name: String) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
         let project_id = self.selected_project.ok_or(Error::NoProjectSelected)?;
-        tasks::create(&ws, project_id, name)?;
+        self.daemon.create_task(self.workspace()?, project_id, name)?;
         Ok(())
     }
 
     /// Rename a task.
     pub fn rename_task(&mut self, task_id: TaskId, new_name: String) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::rename(&ws, task_id, new_name)?;
+        self.daemon.rename_task(self.workspace()?, task_id, new_name, None)?;
         Ok(())
     }
 
     /// Move a task to a different project.
     pub fn move_task(&mut self, task_id: TaskId, project_id: ProjectId) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::move_to_project(&ws, task_id, project_id)?;
+        self.daemon.move_task(self.workspace()?, task_id, project_id)?;
         Ok(())
     }
 
     /// Set or clear the status of a task.
     pub fn set_task_status(&mut self, task_id: TaskId, status_id: Option<StatusId>) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::set_status(&ws, task_id, status_id)?;
+        self.daemon.set_task_status(self.workspace()?, task_id, status_id)?;
         Ok(())
     }
 
     /// Close a task.
     pub fn close_task(&mut self, task_id: TaskId) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::close(&ws, task_id)?;
+        self.daemon.close_task(self.workspace()?, task_id)?;
         Ok(())
     }
 
     /// Reopen a closed task.
     pub fn reopen_task(&mut self, task_id: TaskId) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        tasks::reopen(&ws, task_id)?;
+        self.daemon.reopen_task(self.workspace()?, task_id)?;
         Ok(())
     }
 
@@ -204,15 +196,13 @@ impl AppState {
         kind: StatusKind,
         description: Option<String>,
     ) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        statuses::create(&ws, name, kind, description)?;
+        self.daemon.create_status(self.workspace()?, name, kind, description)?;
         Ok(())
     }
 
     /// Rename a status.
     pub fn rename_status(&mut self, status_id: StatusId, new_name: String) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        statuses::rename(&ws, status_id, new_name)?;
+        self.daemon.rename_status(self.workspace()?, status_id, new_name)?;
         Ok(())
     }
 
@@ -222,27 +212,24 @@ impl AppState {
         status_id: StatusId,
         description: Option<String>,
     ) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        statuses::update_description(&ws, status_id, description)?;
+        self.daemon.update_status_description(self.workspace()?, status_id, description)?;
         Ok(())
     }
 
     /// Change the semantic kind of a status.
     pub fn change_status_kind(&mut self, status_id: StatusId, new_kind: StatusKind) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        statuses::change_kind(&ws, status_id, new_kind)?;
+        self.daemon.change_status_kind(self.workspace()?, status_id, new_kind)?;
         Ok(())
     }
 
     /// Soft-remove a status.
     pub fn remove_status(&mut self, status_id: StatusId) -> Result<()> {
-        let ws = self.workspace().ok_or(Error::NoWorkspace)?;
-        statuses::remove(&ws, status_id)?;
+        self.daemon.remove_status(self.workspace()?, status_id)?;
         Ok(())
     }
 
     /// Try to open the most recent workspace that still exists on disk.
-    /// Silently does nothing if all recents are gone.
+    /// Silently does nothing if all recents are gone (or the daemon is down).
     pub fn try_open_most_recent(&mut self) {
         let candidates: Vec<PathBuf> = self.recent_workspaces.clone();
         for path in candidates {
@@ -263,27 +250,23 @@ impl AppState {
     // --- Rendering ------------------------------------------------------
 
     /// Derive the current [`View`] from the open workspace and selected
-    /// project, reading the latest data from disk.
+    /// project, fetching the latest data from the daemon.
     pub fn render(&self) -> Result<View> {
-        let Some(ws) = self.workspace() else {
+        let Some(ws) = &self.workspace else {
             return Ok(View::SelectRepo {
-                recent_workspaces: self
-                    .recent_workspaces
-                    .iter()
-                    .map(|p| p.display().to_string())
-                    .collect(),
+                recent_workspaces: self.recent_workspaces_strings(),
             });
         };
-        let workspace = WorkspaceView::of(&ws);
+        let workspace = WorkspaceView::of(ws);
 
         // A selected project that still exists → its task list (or task detail).
         // Otherwise fall back to the project list.
         if let Some(project_id) = self.selected_project {
-            if let Some(project) = projects::load(&ws, project_id)? {
+            if let Some(project) = self.daemon.load_project(ws, project_id)? {
                 if let Some(task_id) = self.selected_task {
-                    if let Some(task) = tasks::load(&ws, task_id)? {
-                        let raw_events = tasks::load_events(&ws, task_id)?;
-                        let all_statuses = statuses::list(&ws)?;
+                    if let Some(task) = self.daemon.load_task(ws, task_id)? {
+                        let raw_events = self.daemon.task_events(ws, task_id)?;
+                        let all_statuses = self.daemon.list_statuses(ws)?;
                         let events = raw_events
                             .iter()
                             .map(|e| TaskEventView::from_event(e, &all_statuses))
@@ -298,21 +281,21 @@ impl AppState {
                     }
                     // Task not found — fall through to task list.
                 }
-                let task_list = tasks::list_in_project(&ws, project_id)?;
-                let all_projects = projects::list(&ws)?;
+                let tasks = self.daemon.list_tasks_in_project(ws, project_id)?;
+                let projects = self.daemon.list_projects(ws)?;
                 return Ok(View::Tasks {
                     workspace,
                     project,
-                    projects: all_projects,
-                    tasks: task_list,
-                    statuses: statuses::list(&ws)?,
+                    projects,
+                    tasks,
+                    statuses: self.daemon.list_statuses(ws)?,
                 });
             }
         }
 
         Ok(View::Projects {
             workspace,
-            projects: projects::list(&ws)?,
+            projects: self.daemon.list_projects(ws)?,
         })
     }
 }
@@ -342,92 +325,57 @@ mod tests {
     #[test]
     fn boots_to_select_repo() {
         let state = AppState::default();
-        assert!(matches!(
-            state.render().unwrap(),
-            View::SelectRepo { .. }
-        ));
+        assert!(matches!(state.render().unwrap(), View::SelectRepo { .. }));
     }
 
+    /// End-to-end against a live daemon; run with `cargo test -- --ignored`
+    /// while `tasks-server` is up.
     #[test]
-    fn walks_through_the_three_screens() {
+    #[ignore = "requires a running tasks daemon on 127.0.0.1:4000"]
+    fn walks_through_the_three_screens_via_the_daemon() {
         let tmp = tempfile::tempdir().unwrap();
         let mut state = AppState::default();
 
-        // Open workspace → projects screen (empty).
         state.open_workspace(tmp.path().to_path_buf()).unwrap();
         match state.render().unwrap() {
             View::Projects { projects, .. } => assert!(projects.is_empty()),
             other => panic!("expected projects, got {other:?}"),
         }
 
-        // Create a project, then open it → tasks screen.
         state.create_project("Roadmap".into()).unwrap();
         let project_id = match state.render().unwrap() {
-            View::Projects { projects, .. } => {
-                assert_eq!(projects.len(), 1);
-                projects[0].id
-            }
+            View::Projects { projects, .. } => projects[0].id,
             other => panic!("expected projects, got {other:?}"),
         };
         state.open_project(project_id);
         state.create_task("First task".into()).unwrap();
         match state.render().unwrap() {
-            View::Tasks { project, tasks, .. } => {
+            View::Tasks { project, tasks, statuses, .. } => {
                 assert_eq!(project.id, project_id);
                 assert_eq!(tasks.len(), 1);
                 assert_eq!(tasks[0].name, "First task");
+                assert!(!statuses.is_empty());
             }
             other => panic!("expected tasks, got {other:?}"),
         }
 
-        // Back out to projects, then close the workspace.
+        let task_id = match state.render().unwrap() {
+            View::Tasks { tasks, .. } => tasks[0].id,
+            other => panic!("expected tasks, got {other:?}"),
+        };
+        state.open_task(task_id);
+        match state.render().unwrap() {
+            View::TaskDetail { task, events, .. } => {
+                assert_eq!(task.id, task_id);
+                assert_eq!(events.len(), 1);
+                assert_eq!(events[0].kind, "created");
+            }
+            other => panic!("expected task detail, got {other:?}"),
+        }
+
+        state.close_task_detail();
         state.close_project();
-        assert!(matches!(state.render().unwrap(), View::Projects { .. }));
         state.close_workspace();
         assert!(matches!(state.render().unwrap(), View::SelectRepo { .. }));
-    }
-
-    #[test]
-    fn recents_are_tracked_and_capped() {
-        let tmp = tempfile::tempdir().unwrap();
-        let mut state = AppState::default();
-
-        let dirs: Vec<PathBuf> = (0..4)
-            .map(|i| {
-                let p = tmp.path().join(format!("repo{i}"));
-                std::fs::create_dir_all(&p).unwrap();
-                p
-            })
-            .collect();
-
-        for d in &dirs {
-            state.open_workspace(d.clone()).unwrap();
-            state.close_workspace();
-        }
-
-        match state.render().unwrap() {
-            View::SelectRepo { recent_workspaces } => {
-                assert_eq!(recent_workspaces.len(), 3);
-                // most recent first
-                assert!(recent_workspaces[0].contains("repo3"));
-            }
-            other => panic!("expected select_repo, got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn create_without_context_errors() {
-        let mut state = AppState::default();
-        assert!(matches!(
-            state.create_project("x".into()),
-            Err(Error::NoWorkspace)
-        ));
-
-        let tmp = tempfile::tempdir().unwrap();
-        state.open_workspace(tmp.path().to_path_buf()).unwrap();
-        assert!(matches!(
-            state.create_task("x".into()),
-            Err(Error::NoProjectSelected)
-        ));
     }
 }

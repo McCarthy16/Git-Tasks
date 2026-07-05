@@ -1,6 +1,6 @@
 //! The `Project` projection: a project as rebuilt from its event history.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::shared::id::prefixed_id;
 
@@ -14,7 +14,7 @@ prefixed_id!(
 ///
 /// This is pure read-side data — the shape of a project after all its events
 /// have been folded. The folding itself lives in the `reconstruction` layer.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Project {
     pub id: ProjectId,
     pub name: String,

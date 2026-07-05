@@ -1,12 +1,13 @@
 //! Views: the screen descriptions the frontend renders.
 
+use std::path::Path;
+
 use serde::Serialize;
 
-use crate::projects::Project;
-use crate::shared::store::Workspace;
-use crate::statuses::Status;
-use crate::tasks::{Task, TaskEvent, TaskEventKind};
+use tasks_core::events::task::TaskEventKind;
+use tasks_core::{Project, Status, Task};
 
+use crate::daemon::TaskEvent;
 
 /// A workspace summary for the header.
 #[derive(Clone, Debug, Serialize)]
@@ -18,10 +19,10 @@ pub struct WorkspaceView {
 }
 
 impl WorkspaceView {
-    pub fn of(workspace: &Workspace) -> Self {
+    pub fn of(root: &Path) -> Self {
         Self {
-            root: workspace.root().display().to_string(),
-            tasks_dir: workspace.dot_tasks().display().to_string(),
+            root: root.display().to_string(),
+            tasks_dir: root.join(".tasks").display().to_string(),
         }
     }
 }
@@ -31,7 +32,8 @@ impl WorkspaceView {
 pub struct TaskEventView {
     pub id: String,
     pub created_at_millis: Option<u64>,
-    /// Event type tag: "created", "renamed", "moved", "closed", "reopened", "description_updated".
+    /// Event type tag: "created", "renamed", "moved", "closed", "reopened",
+    /// "description_updated", "status_changed", "snapshot".
     pub kind: String,
     /// Human-relevant detail (new name for renames, project id for moves, etc.).
     pub detail: Option<String>,
@@ -45,17 +47,20 @@ impl TaskEventView {
             TaskEventKind::Moved { new_project_id } => ("moved", Some(new_project_id.to_string())),
             TaskEventKind::Closed => ("closed", None),
             TaskEventKind::Reopened => ("reopened", None),
-            TaskEventKind::DescriptionUpdated { description } => ("description_updated", Some(description.clone())),
+            TaskEventKind::DescriptionUpdated { description } => {
+                ("description_updated", Some(description.clone()))
+            }
             TaskEventKind::StatusChanged { status_id } => (
                 "status_changed",
                 status_id.and_then(|id| {
                     statuses.iter().find(|s| s.id == id).map(|s| s.name.clone())
                 }),
             ),
+            TaskEventKind::Snapshot { name, .. } => ("snapshot", Some(name.clone())),
         };
         Self {
-            id: event.id.to_string(),
-            created_at_millis: event.created_at_millis(),
+            id: event.id.clone(),
+            created_at_millis: event.created_at_millis,
             kind: kind.to_string(),
             detail,
         }

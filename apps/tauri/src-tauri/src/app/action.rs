@@ -2,10 +2,7 @@
 
 use serde::Deserialize;
 
-use crate::projects::ProjectId;
-use crate::shared::id::EventId;
-use crate::statuses::{StatusId, StatusKind};
-use crate::tasks::TaskId;
+use tasks_core::{EventId, ProjectId, StatusId, StatusKind, TaskId};
 
 /// An intent sent from the UI. The app reduces it against the current
 /// [`AppState`](super::state::AppState) and returns a fresh

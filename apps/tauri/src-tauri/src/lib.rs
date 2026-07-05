@@ -2,14 +2,12 @@
 //!
 //! The frontend never holds routing or domain state. It calls `view` once to
 //! learn what to draw, then `dispatch` for every interaction — each returns the
-//! freshly-rendered [`View`]. All navigation and data live in [`app::state`].
+//! freshly-rendered [`View`]. Navigation lives in [`app::state`]; the data
+//! itself lives behind the tasks daemon, reached through [`daemon`].
 
 mod app;
+mod daemon;
 mod error;
-mod projects;
-mod shared;
-mod statuses;
-mod tasks;
 
 use std::path::PathBuf;
 use std::sync::Mutex;
