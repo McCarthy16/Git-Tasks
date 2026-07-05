@@ -15,10 +15,12 @@ The repository is a combined pnpm + Cargo workspace:
 
 | Path | Package | Role |
 |---|---|---|
-| `packages/core` | `tasks-core` | The domain: events, storage, reconstruction, projections, commands, seeds. |
-| `apps/server` | `tasks-server` | The daemon: owns core logic, exposes it as a data API over local HTTP. |
-| `apps/cli` | `tasks-cli` | Terminal client for the daemon (`tasks` binary). |
-| `apps/tauri` | `@tasks/tauri` | The desktop app: React UI rendering workspaces served by the daemon. |
+| [`packages/core`](../packages/core/README.md) | `tasks-core` | The domain: events, storage, reconstruction, projections, commands, seeds. |
+| [`apps/server`](../apps/server/README.md) | `tasks-server` | The daemon: owns core logic, exposes it as a data API over local HTTP. |
+| [`apps/cli`](../apps/cli/README.md) | `tasks-cli` | Terminal client for the daemon (`tasks` binary). |
+| [`apps/tauri`](../apps/tauri/README.md) | `@tasks/tauri` | The desktop app: React UI rendering workspaces served by the daemon. |
+
+Each package has its own README covering how to run and work on it.
 
 ## The core crate (`tasks-core`)
 
